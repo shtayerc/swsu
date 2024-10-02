@@ -1,0 +1,36 @@
+#! /bin/sh
+destdir="${DESTDIR_IMG:=$(dirname "$2")/}"
+filename="$(basename "${2%%.*}")"
+case "$1" in
+    "webp")
+        magick "$2" -quality "${WEBP_QUALITY:=30}" "${destdir}${filename}.webp"
+        echo "webp $2 ${destdir}${filename}.webp"
+        ;;
+    "srcset")
+        for size in ${SRCSET_SIZE:="200 400 800 1200"}
+        do
+            magick "$2" -resize "x${size}" "${destdir}${filename}-${size}.webp"
+            echo "srcset $2 ${destdir}${filename}-${size}.webp"
+        done
+        ;;
+    "watermark")
+        watermark_w="${WATERMARK_W:=400}"
+        watermark_h="${WATERMARK_H:=190}"
+        watermark_x="${WATERMARK_X:=5}"
+        watermark_y="${WATERMARK_Y:=0}"
+        watermark_location="${WATERMARK_LOCATION:=southwest}"
+        watermark_crop="${watermark_w}x${watermark_h}+${watermark_x}+${watermark_y}"
+        watermark_coord="${watermark_x},${watermark_y},${watermark_w},${watermark_h}"
+        color_mean="$(magick "$2" -gravity "${watermark_location}" -crop "${watermark_crop}" -verbose -format "%[fx:mean-${WATERMARK_COLOR_PERCENT:=0.7}]" info:)"
+        case "$color_mean" in
+            -*)
+                watermark_img="${WATERMARK_LIGHT_IMG:=watermark/logo-white.png}"
+                ;;
+            *)
+                watermark_img="${WATERMARK_DARK_IMG:=watermark/logo-black.png}"
+                ;;
+        esac
+        magick "$2" -gravity "${watermark_location}" -draw "image Over ${watermark_coord} ${watermark_img}" "${destdir}${filename}.webp"
+        echo "watermark $2 ${destdir}${filename}.webp"
+        ;;
+esac

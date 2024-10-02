@@ -1,0 +1,24 @@
+#! /bin/sh
+sed="sed "
+if ! sed --help 2> /dev/null
+then
+    sed="gsed "
+fi
+
+filename="$(basename "$2")"
+case "$1" in
+    "template")
+        $sed-i -e "/<!--$filename-->/r $2" -e "/<!--$filename-->/d" "$3"
+        ;;
+    "srcset")
+        srcset=""
+        separator=""
+        for size in ${SRCSET_SIZES:="200 400 800 1200"}
+        do
+            srcset="${srcset}${separator}"'\2'"-${size}.webp ${size}w"
+            separator=", "
+        done
+        $sed -ri 's/(<img src="([a-zA-Z_][^.0-9]*).webp")/\1 srcset="'"$srcset"'"/' "$2"
+        $sed -ri 's/ nosrcset//' "$2"
+        ;;
+esac
