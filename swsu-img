@@ -3,7 +3,7 @@ destdir="${DESTDIR_IMG:=$(dirname "$2")/}"
 filename="$(basename "${2%%.*}")"
 case "$1" in
     "webp")
-        magick "$2" -quality "${WEBP_QUALITY:=30}" "${destdir}${filename}.webp"
+        magick "$2" -quality "${WEBP_QUALITY:=30}" -auto-orient "${destdir}${filename}.webp"
         echo "webp $2 ${destdir}${filename}.webp"
         ;;
     "srcset")
